@@ -3,6 +3,7 @@ package moe.imtop1.telegramtest.bot;
 import jakarta.annotation.Resource;
 import moe.imtop1.telegramtest.api.NezhaApi;
 import moe.imtop1.telegramtest.domain.ServerInfo;
+import moe.imtop1.telegramtest.domain.vo.ServerDetailVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
@@ -47,12 +48,23 @@ public class BotTestOne extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        List<ServerInfo> serverList = nezhaApi.getServerList(null);
+        String text = update.getMessage().getText();
+        SendMessage message = null;
 
-        SendMessage message = SendMessage.builder()
-                .text(serverList.toString())
-                .chatId(update.getMessage().getChatId().toString())
-                .build();
+        if ("1".equals(text)) {
+            List<ServerInfo> serverList = nezhaApi.getServerList(null);
+            message = SendMessage.builder()
+                    .text(serverList.toString())
+                    .chatId(update.getMessage().getChatId().toString())
+                    .build();
+        } else {
+            List<ServerDetailVO> serverList = nezhaApi.getServerDeList(null, Long.valueOf(text));
+            message = SendMessage.builder()
+                    .text(serverList.toString())
+                    .chatId(update.getMessage().getChatId().toString())
+                    .build();
+        }
+
 
         try {
             execute(message);
