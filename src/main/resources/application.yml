@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: telegram-nezha-bot
+
+telegram:
+  bot:
+    config:
+      token: 7140980098:AAHUBamYQ9_BDZfRWxV_Yv3E-Ze2x1cSoDU
+      userName: 5760639009
+  proxy:
+    config:
+      address: 127.0.0.1
+      port: 10809
+      proxyType: NO_PROXY
+
+
+nezha:
+  address: https://status.imtop1.moe
+  token: a50fb02802d436325b62f926d6cb60f2
+  path:
+    serverInfo: /api/v1/server/list
+    serverDetail: /api/v1/server/details
