@@ -1,16 +1,20 @@
-package moe.imtop1.telegramtest.api;
+package moe.imtop1.bot.api;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import moe.imtop1.telegramtest.domain.ServerInfo;
-import moe.imtop1.telegramtest.domain.vo.ServerDetailVO;
+import moe.imtop1.bot.domain.ServerInfo;
+import moe.imtop1.bot.domain.vo.ServerDetailVO;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchProperties;
+import org.springframework.boot.autoconfigure.web.client.RestClientSsl;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -30,6 +34,7 @@ public class NezhaApi {
     private String serverInfoPath;
     @Value(value = "${nezha.path.serverDetail}")
     private String serverDetailPath;
+
 
     public List<ServerInfo> getServerList(String tag) {
         String path = address + serverInfoPath;
@@ -101,6 +106,7 @@ public class NezhaApi {
             if (code == 200) {
                 String responseBody = EntityUtils.toString(response.getEntity(), "UTF-8");
                 ObjectMapper mapper = new ObjectMapper();
+                mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
                 JsonNode root = mapper.readTree(responseBody);
                 if (root.path("code").asInt() == 0) {
                     JsonNode results = root.path("result");

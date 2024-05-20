@@ -1,7 +1,7 @@
-package moe.imtop1.telegramtest.config;
+package moe.imtop1.bot.config;
 
 import lombok.extern.slf4j.Slf4j;
-import moe.imtop1.telegramtest.bot.BotTestOne;
+import moe.imtop1.bot.bot.BotTestOne;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,6 +32,8 @@ public class TelegramBotConfig {
         if (botOptions.getProxyType() != DefaultBotOptions.ProxyType.NO_PROXY) {
             botOptions.setProxyHost(address);
             botOptions.setProxyPort(Integer.parseInt(port));
+
+            log.info("Proxy Type: " + proxyType + " Address: " + address + ":" + port);
         }
         return botOptions;
     }
@@ -42,7 +44,7 @@ public class TelegramBotConfig {
             TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
             telegramBotsApi.registerBot(bot);
 
-            log.info("成功注册Telegram Bot：" + bot);
+            log.info("Success registering the bot: " + bot);
 
             return telegramBotsApi;
         } catch (TelegramApiException e) {

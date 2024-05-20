@@ -1,4 +1,4 @@
-package moe.imtop1.telegramtest.domain;
+package moe.imtop1.bot.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

@@ -10,7 +10,7 @@ telegram:
   proxy:
     config:
       address: 127.0.0.1
-      port: 10809
+      port: 10808
       proxyType: NO_PROXY
 
 
