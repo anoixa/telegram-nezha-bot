@@ -66,7 +66,7 @@ public class NezhaBot extends TelegramLongPollingBot {
                     String tag = StringUtils.hasText(param) ? param : null;
                     List<ServerInfo> serverList = nezhaApi.getServerList(tag);
                     SendMessage numMessage = SendMessage.builder()
-                            .text(String.valueOf(ToolUtils.getServerNum(serverList)))
+                            .text(String.valueOf(ToolUtils.getNum(serverList)))
                             .chatId(update.getMessage().getChatId().toString())
                             .build();
                     msgList.add(numMessage);
