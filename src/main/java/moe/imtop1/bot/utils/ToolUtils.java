@@ -2,6 +2,7 @@ package moe.imtop1.bot.utils;
 
 import moe.imtop1.bot.domain.ServerInfo;
 import moe.imtop1.bot.domain.vo.ServerDetailVO;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -59,19 +60,19 @@ public class ToolUtils {
     public static String formatStatusMessage(ServerDetailVO status) {
         return String.format(
                 """
-                        🌐 %s
+                        🌐 %s  (%s)
                         ====================
                         tag: %s    id: %d
                         ipv4: %s
-                        ipv6: %s
+                        ipv6: %s %s
                         平台: %s
                         CPU 型号: %s
                         运行时间: %.1f 天
                         负载: %.2f %.2f %.2f (1,5,15)
                         CPU: %.2f%%
-                        内存: %.2f GB
-                        交换: %.2f GB
-                        磁盘: %.2f GB
+                        内存: %.2f GB (%.2f%%)
+                        交换: %.2f GB\s
+                        磁盘: %.2f GB (%.2f%%)
                         网速: ⬆️ %.2f KB/s ⬇️ %.2f KB/s
                         TCP连接数: %s
                         UDP连接数: %s
@@ -79,10 +80,12 @@ public class ToolUtils {
                         更新于: %s
                         """,
                 status.getName(),
+                status.getServerDetailHost().getCountryCode(),
                 status.getTag(),
                 status.getId(),
                 status.getIpv4(),
                 status.getIpv6(),
+                StringUtils.hasText(status.getIpv6()) ? "✅" : "❌",
                 status.getServerDetailHost().getPlatform(),
                 status.getServerDetailHost().getCpu(),
                 secondsToDays(Long.parseLong(status.getServerDetailStatus().getUptime())),
@@ -91,8 +94,10 @@ public class ToolUtils {
                 Double.valueOf(status.getServerDetailStatus().getLoad15()),
                 Double.valueOf(status.getServerDetailStatus().getCpu()),
                 bytesToGigabytes(Long.parseLong(status.getServerDetailStatus().getMemUsed())),
+                (bytesToGigabytes(Long.parseLong(status.getServerDetailStatus().getMemUsed())) / bytesToGigabytes(Long.parseLong(status.getServerDetailHost().getMemTotal()))) * 100.0,
                 bytesToGigabytes(Long.parseLong(status.getServerDetailStatus().getSwapUsed())),
                 bytesToGigabytes(Long.parseLong(status.getServerDetailStatus().getDiskUsed())),
+                (bytesToGigabytes(Long.parseLong(status.getServerDetailStatus().getDiskUsed())) / bytesToGigabytes(Long.parseLong(status.getServerDetailHost().getDiskTotal()))) * 100.0,
                 convertBitsPerSecondToKilobytesPerSecond(Integer.parseInt(status.getServerDetailStatus().getNetInSpeed())),
                 convertBitsPerSecondToKilobytesPerSecond(Integer.parseInt(status.getServerDetailStatus().getNetOutSpeed())),
                 status.getServerDetailStatus().getTcpConnCount(),
