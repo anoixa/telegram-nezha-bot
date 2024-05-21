@@ -2,6 +2,7 @@ package moe.imtop1.bot.config;
 
 import lombok.extern.slf4j.Slf4j;
 import moe.imtop1.bot.bot.NezhaBot;
+import moe.imtop1.bot.utils.MessagesEnum;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,7 +34,7 @@ public class TelegramBotConfig {
             botOptions.setProxyHost(address);
             botOptions.setProxyPort(Integer.parseInt(port));
 
-            log.info("Proxy Type: " + proxyType + " Address: " + address + ":" + port);
+            log.info(String.format(MessagesEnum.PROXY_INFO, proxyType, address + ":" + port));
         }
         return botOptions;
     }
@@ -44,11 +45,11 @@ public class TelegramBotConfig {
             TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
             telegramBotsApi.registerBot(bot);
 
-            log.info("Success registering the bot: " + bot);
+            log.info(MessagesEnum.SUCCESS_REGISTERING_BOT + ": " + bot);
 
             return telegramBotsApi;
         } catch (TelegramApiException e) {
-            throw new RuntimeException("Error registering the bot.", e);
+            throw new RuntimeException(MessagesEnum.ERROR_REGISTERING_BOT + ": ", e);
         }
     }
 

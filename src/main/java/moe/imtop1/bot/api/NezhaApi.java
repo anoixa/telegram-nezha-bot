@@ -13,8 +13,6 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchProperties;
-import org.springframework.boot.autoconfigure.web.client.RestClientSsl;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -22,6 +20,10 @@ import org.springframework.util.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * nezha api
+ * @author anoixa
+ */
 @Component
 @Slf4j
 public class NezhaApi {
