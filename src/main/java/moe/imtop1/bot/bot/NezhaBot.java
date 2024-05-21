@@ -14,7 +14,10 @@ import org.springframework.util.StringUtils;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
@@ -51,20 +54,41 @@ public class NezhaBot extends TelegramLongPollingBot {
         return this.token;
     }
 
+    /**
+     * 接收并处理来自Telegram服务器的更新。
+     * @param update 包含消息或回调查询的Telegram更新对象。
+     */
     @Override
     public void onUpdateReceived(Update update) {
-        String text = update.getMessage().getText();
-        if (StringUtils.hasText(text)) {
-            List<SendMessage> msgList = this.getMessage(text, update);
+        try {
+            if (update.hasCallbackQuery()) {
+                String callbackData = update.getCallbackQuery().getData();
+                long messageId = update.getCallbackQuery().getMessage().getMessageId();
+                long chatId = update.getCallbackQuery().getMessage().getChatId();
 
-            msgList.stream().forEach(item -> {
-                try {
-                    execute(item);
-                } catch (TelegramApiException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+                this.handleCallback(callbackData, chatId, messageId);
+            } else if (update.hasMessage() && update.getMessage().hasText()) {
+                String text = update.getMessage().getText();
+                long chatId = update.getMessage().getChatId();
+
+                this.handleCommand(text, chatId);
+            }
+        } catch (TelegramApiException e) {
+            log.error("Error processing update.", e);
         }
+
+//        String text = update.getMessage().getText();
+//        if (StringUtils.hasText(text)) {
+//            List<SendMessage> msgList = this.getMessage(text, update);
+//
+//            msgList.stream().forEach(item -> {
+//                try {
+//                    execute(item);
+//                } catch (TelegramApiException e) {
+//                    throw new RuntimeException(e);
+//                }
+//            });
+//        }
 
 
 //        if ("/num".equals(text)) {
@@ -80,90 +104,178 @@ public class NezhaBot extends TelegramLongPollingBot {
 //                    .chatId(update.getMessage().getChatId().toString())
 //                    .build();
 //        }
-
     }
 
     /**
-     * 封装消息对象
-     * @param text 输入内容
-     * @param update Update对象
-     * @return 消息
+     * 处理回调查询，通常用于内联键盘按钮的交互。
+     * @param callbackData 从回调中获取的数据，用于决定后续操作。
+     * @param chatId 聊天的唯一标识符。
+     * @param messageId 需要编辑的消息的ID。
+     * @throws TelegramApiException 如果在执行Telegram API操作时发生错误。
      */
-    private List<SendMessage> getMessage(String text, Update update) {
+    private void handleCallback(String callbackData, long chatId, long messageId) throws TelegramApiException {
+        String[] parts = callbackData.split(" ", 2);
+        String command = parts[0];
+        String param = parts.length > 1 ? parts[1] : null;
+
+        List<SendMessage> messages = getMessage(command, chatId, param);
+        for (SendMessage message : messages) {
+            EditMessageText editMessageText = new EditMessageText();
+
+            editMessageText.setMessageId(Math.toIntExact(messageId));
+            editMessageText.setChatId(String.valueOf(chatId));
+            editMessageText.setText(message.getText());
+            editMessageText.setReplyMarkup((InlineKeyboardMarkup) message.getReplyMarkup());
+
+            execute(editMessageText);
+        }
+    }
+
+    /**
+     * 处理用户通过文本消息发送的命令。
+     * @param text 用户发送的文本，包含命令和可能的参数。
+     * @param chatId 聊天的唯一标识符。
+     * @throws TelegramApiException 如果在执行Telegram API操作时发生错误。
+     */
+    private void handleCommand(String text, long chatId) throws TelegramApiException {
+        String[] parts = text.split(" ", 2);
+        String command = parts[0];
+        String param = parts.length > 1 ? parts[1] : null;
+
+        List<SendMessage> messages = getMessage(command, chatId, param);
+        for (SendMessage message : messages) {
+            execute(message);
+        }
+    }
+
+    /**
+     * 创建包含“刷新”按钮的内联键盘。
+     * 该按钮通过回调数据触发与原始命令相同的操作，允许用户刷新内容而不产生新的消息。
+     * @param command 用户最初输入的命令，用于在点击按钮时重新执行。
+     * @param param 命令可能包含的参数，将一并发送作为回调数据。
+     * @return 构造好的内联键盘，准备附加到SendMessage对象中。
+     */
+    private InlineKeyboardMarkup createRefreshButton(String command, String param) {
+        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+        List<InlineKeyboardButton> rowInline = new ArrayList<>();
+
+        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
+        inlineKeyboardButton.setText("刷新");
+        inlineKeyboardButton.setCallbackData(command + (param != null ? " " + param : ""));
+
+        rowInline.add(inlineKeyboardButton);
+        rowsInline.add(rowInline);
+        markupInline.setKeyboard(rowsInline);
+
+        return markupInline;
+    }
+
+    /**
+     * 创建带有内联键盘按钮的Telegram消息。
+     * @param chatId 消息发送的目标聊天ID。
+     * @param text 消息文本。
+     * @param markupInline 包含内联键盘的布局。
+     * @return 构造完成的SendMessage对象。
+     */
+    private SendMessage createMessage(String chatId, String text, InlineKeyboardMarkup markupInline) {
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText(text);
+
+        if (markupInline != null) {
+            message.setReplyMarkup(markupInline);
+        }
+        return message;
+    }
+
+    /**
+     * 根据输入命令和参数生成响应消息。
+     * @param command 用户输入的命令。
+     * @param chatId 消息所在的聊天ID。
+     * @param param 命令后可能跟随的参数。
+     * @return 一个包含所有响应消息的列表。
+     */
+    private List<SendMessage> getMessage(String command, long chatId, String param) {
         List<SendMessage> msgList = new ArrayList<>();
 
-        String[] split = text.split(" ");
-        String command = split[0].trim();
-        String param = split.length > 1 ? split[1].trim() : null;
-
+        // 根据命令分别处理
         switch (command) {
             case "/num":
+                // 返回服务器信息列表
                 String tag = StringUtils.hasText(param) ? param : null;
                 List<ServerInfo> serverList = nezhaApi.getServerList(tag);
-                SendMessage numMessage = SendMessage.builder()
-                        .text(String.valueOf(ToolUtils.getNum(serverList)))
-                        .chatId(update.getMessage().getChatId().toString())
-                        .build();
-                msgList.add(numMessage);
+                if (serverList.isEmpty()) {
+                    msgList.add(this.createMessage(
+                            String.valueOf(chatId),
+                            "No servers found.",
+                            createRefreshButton(command, param)
+                    ));
+                } else {
+                    String serverCountMsg = serverList.size() + " servers found.";
+                    msgList.add(this.createMessage(
+                            String.valueOf(chatId),
+                            serverCountMsg,
+                            createRefreshButton(command, param)
+                    ));
+                }
                 break;
             case "/id":
-                if (StringUtils.hasText(param)) {
-                    if (ToolUtils.isNumeric(param)) {
-                        List<ServerDetailVO> serverDetailListById = nezhaApi
-                                .getServerDeList(null, Long.valueOf(param));
-
-                        if (!ObjectUtils.isEmpty(serverDetailListById.getFirst())) {
-                            SendMessage idSuccessMessage = SendMessage.builder()
-                                    .text(this.formatStatusMessage(serverDetailListById.getFirst()))
-                                    .chatId(update.getMessage().getChatId().toString())
-                                    .build();
-                            msgList.add(idSuccessMessage);
-                        }
+                //根据ID返回服务器的详细信息
+                try {
+                    long serverId = Long.parseLong(param);
+                    List<ServerDetailVO> serverDetailListById = nezhaApi.getServerDeList(null, serverId);
+                    if (serverDetailListById != null) {
+                        ServerDetailVO serverDetailVO = serverDetailListById.getFirst();
+                        String detailMessage = formatStatusMessage(serverDetailVO);
+                        msgList.add(this.createMessage(
+                                String.valueOf(chatId),
+                                detailMessage,
+                                createRefreshButton(command, param)
+                        ));
                     } else {
-                        SendMessage idErrorMessage = SendMessage.builder()
-                                .text(MessagesEnum.ILLEGAL_PARAM)
-                                .chatId(update.getMessage().getChatId().toString())
-                                .build();
-                        msgList.add(idErrorMessage);
+                        msgList.add(this.createMessage(
+                                String.valueOf(chatId),
+                                "Server with ID " + param + " not found.",
+                                createRefreshButton(command, null)
+                        ));
                     }
-                } else {
-                    SendMessage idErrorMessage = SendMessage.builder()
-                            .text(MessagesEnum.NULL_MSG)
-                            .chatId(update.getMessage().getChatId().toString())
-                            .build();
-                    msgList.add(idErrorMessage);
+                } catch (NumberFormatException e) {
+                    msgList.add(this.createMessage(
+                            String.valueOf(chatId),
+                            "Invalid ID format.",
+                            createRefreshButton(command, null)
+                    ));
                 }
                 break;
             case "/search":
-                if (StringUtils.hasText(param)) {
-                    List<ServerDetailVO> serverDetailListLikeById = nezhaApi
-                            .getServerDeList(null, null);
-                    List<ServerDetailVO> collect = serverDetailListLikeById.stream()
-                            .filter(item -> item.getName().contains(param))
-                            .toList();
-                    if (!collect.isEmpty()) {
-                        collect.stream().forEach(item -> {
-                            SendMessage searchSuccessMessage = SendMessage.builder()
-                                    .text(this.formatStatusMessage(item))
-                                    .chatId(update.getMessage().getChatId().toString())
-                                    .build();
-                            msgList.add(searchSuccessMessage);
-                        });
-                    }
+                //根据名称搜索服务器
+                List<ServerDetailVO> serverDetailListLikeById = nezhaApi.getServerDeList(null, null);
+                List<ServerDetailVO> collect = serverDetailListLikeById.stream()
+                        .filter(item -> item.getName().contains(param))
+                        .toList();
+                if (collect.isEmpty()) {
+                    msgList.add(this.createMessage(
+                            String.valueOf(chatId),
+                            "No servers match your query.",
+                            createRefreshButton(command, param)));
                 } else {
-                    SendMessage searchErrorMessage = SendMessage.builder()
-                            .text(MessagesEnum.NULL_MSG)
-                            .chatId(update.getMessage().getChatId().toString())
-                            .build();
-                    msgList.add(searchErrorMessage);
+                    collect.forEach(server -> {
+                        String detailMessage = formatStatusMessage(server);
+                        msgList.add(createMessage(
+                                String.valueOf(chatId),
+                                detailMessage,
+                                createRefreshButton(command, param)
+                        ));
+                    });
                 }
                 break;
             default:
-                SendMessage errorMessage = SendMessage.builder()
-                        .text(MessagesEnum.ILLEGAL_ORDER)
-                        .chatId(update.getMessage().getChatId().toString())
-                        .build();
-                msgList.add(errorMessage);
+                msgList.add(this.createMessage(
+                        String.valueOf(chatId),
+                        "Invalid command. Please try again.",
+                        createRefreshButton(command, null)
+                ));
         }
 
         return msgList;
@@ -185,7 +297,9 @@ public class NezhaBot extends TelegramLongPollingBot {
                 status.getIpv4(),
                 status.getIpv6(),
                 StringUtils.hasText(status.getIpv6()) ? "✅" : "❌",
-                status.getServerDetailHost().getPlatform() + "-" + status.getServerDetailHost().getPlatformVersion() + " [" + status.getServerDetailHost().getArch() + "]",
+                status.getServerDetailHost().getPlatform() + "-" +
+                        status.getServerDetailHost().getPlatformVersion() +
+                        " [" + status.getServerDetailHost().getArch() + "]",
                 status.getServerDetailHost().getCpu(),
                 ToolUtils.secondsToDays(Long.parseLong(status.getServerDetailStatus().getUptime())),
                 Double.valueOf(status.getServerDetailStatus().getLoad1()),
@@ -199,7 +313,8 @@ public class NezhaBot extends TelegramLongPollingBot {
                 ToolUtils.bytesToGigabytes(Long.parseLong(status.getServerDetailStatus().getSwapUsed())),
                 ToolUtils.bytesToGigabytes(Long.parseLong(status.getServerDetailHost().getSwapTotal())),
                 (ToolUtils.bytesToGigabytes(Long.parseLong(status.getServerDetailStatus().getSwapUsed())) /
-                        ("0".equals(status.getServerDetailHost().getSwapTotal()) ? 1.0 : ToolUtils.bytesToGigabytes(Long.parseLong(status.getServerDetailHost().getSwapTotal())))) * 100.0,
+                        ("0".equals(status.getServerDetailHost().getSwapTotal()) ? 1.0 :
+                                ToolUtils.bytesToGigabytes(Long.parseLong(status.getServerDetailHost().getSwapTotal())))) * 100.0,
                 ToolUtils.bytesToGigabytes(Long.parseLong(status.getServerDetailStatus().getDiskUsed())),
                 ToolUtils.bytesToGigabytes(Long.parseLong(status.getServerDetailHost().getDiskTotal())),
                 (ToolUtils.bytesToGigabytes(Long.parseLong(status.getServerDetailStatus().getDiskUsed())) /
