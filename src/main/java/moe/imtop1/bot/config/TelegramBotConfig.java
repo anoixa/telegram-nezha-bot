@@ -34,7 +34,7 @@ public class TelegramBotConfig {
             botOptions.setProxyHost(address);
             botOptions.setProxyPort(Integer.parseInt(port));
 
-            log.info(String.format(MessagesEnum.PROXY_INFO, proxyType, address + ":" + port));
+            log.info(String.format(MessagesEnum.PROXY_INFO_TEMPLATE, proxyType, address + ":" + port));
         }
         return botOptions;
     }

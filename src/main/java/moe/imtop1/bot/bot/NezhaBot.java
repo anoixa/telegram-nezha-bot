@@ -176,26 +176,8 @@ public class NezhaBot extends TelegramLongPollingBot {
      */
     private String formatStatusMessage(ServerDetailVO status) {
         return String.format(
-                """
-                        🌐 %s  (%s)
-                        ====================
-                        ID: %d    TAG: %s
-                        IPv4: %s
-                        IPv6: %s %s
-                        平台: %s
-                        CPU 型号: %s
-                        运行时间: %.1f 天
-                        负载: %.2f %.2f %.2f (1,5,15)
-                        CPU: %.2f%%
-                        内存: %.2f GB/%.2f GB (%.2f%%)
-                        交换: %.2f GB/%.2f GB (%.2f%%)
-                        磁盘: %.2f GB/%.2f GB (%.2f%%)
-                        网速: ⬆️ %.2f KB/s ⬇️ %.2f KB/s
-                        TCP连接数: %s
-                        UDP连接数: %s
-                        ====================
-                        更新于: %s
-                        """,
+                MessagesEnum.SERVER_STATUS_TEMPLATE,
+                ToolUtils.countryCodeToFlagEmoji(status.getServerDetailHost().getCountryCode()),
                 status.getName(),
                 status.getServerDetailHost().getCountryCode().toUpperCase(),
                 status.getId(),
@@ -224,6 +206,8 @@ public class NezhaBot extends TelegramLongPollingBot {
                         ToolUtils.bytesToGigabytes(Long.parseLong(status.getServerDetailHost().getDiskTotal()))) * 100.0,
                 ToolUtils.convertBitsPerSecondToKilobytesPerSecond(Integer.parseInt(status.getServerDetailStatus().getNetInSpeed())),
                 ToolUtils.convertBitsPerSecondToKilobytesPerSecond(Integer.parseInt(status.getServerDetailStatus().getNetOutSpeed())),
+                ToolUtils.bytesToGigabytes(Long.parseLong(status.getServerDetailStatus().getNetOutTransfer())),
+                ToolUtils.bytesToGigabytes(Long.parseLong(status.getServerDetailStatus().getNetInTransfer())),
                 status.getServerDetailStatus().getTcpConnCount(),
                 status.getServerDetailStatus().getUdpConnCount(),
                 new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date())

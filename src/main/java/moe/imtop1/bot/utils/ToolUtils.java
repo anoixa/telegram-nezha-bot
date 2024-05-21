@@ -54,4 +54,26 @@ public class ToolUtils {
         return seconds / 86400.0;
     }
 
+    /**
+     * 将国家代码转换为对应的国旗表情符号。
+     * @param countryCode 两个字母的国家代码（例如 "US"、"HK" 等）。
+     * @return 对应国家的国旗表情符号。
+     */
+    public static String countryCodeToFlagEmoji(String countryCode) {
+        if (countryCode == null || countryCode.length() != 2) {
+            return "🌐";
+        }
+
+        countryCode = countryCode.toUpperCase();
+
+        // 将每个字符转换为对应的区域指示符符号
+        StringBuilder flagEmoji = new StringBuilder();
+        for (char c : countryCode.toCharArray()) {
+            int flagOffset = c - 'A' + 0x1F1E6;
+            flagEmoji.appendCodePoint(flagOffset);
+        }
+
+        return flagEmoji.toString();
+    }
+
 }
