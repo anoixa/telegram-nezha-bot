@@ -9,7 +9,6 @@ import moe.imtop1.bot.utils.ToolUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -161,7 +160,7 @@ public class NezhaBot extends TelegramLongPollingBot {
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
 
         InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
-        inlineKeyboardButton.setText("刷新");
+        inlineKeyboardButton.setText(MessagesEnum.REFRESH_BUTTON);
         inlineKeyboardButton.setCallbackData(command + (param != null ? " " + param : ""));
 
         rowInline.add(inlineKeyboardButton);
@@ -224,7 +223,7 @@ public class NezhaBot extends TelegramLongPollingBot {
                 //根据ID返回服务器的详细信息
                 try {
                     long serverId = Long.parseLong(param);
-                    List<ServerDetailVO> serverDetailListById = nezhaApi.getServerDeList(null, serverId);
+                    List<ServerDetailVO> serverDetailListById = nezhaApi.getServerDetaiList(null, serverId);
                     if (serverDetailListById != null) {
                         ServerDetailVO serverDetailVO = serverDetailListById.getFirst();
                         String detailMessage = formatStatusMessage(serverDetailVO);
@@ -250,7 +249,7 @@ public class NezhaBot extends TelegramLongPollingBot {
                 break;
             case "/search":
                 //根据名称搜索服务器
-                List<ServerDetailVO> serverDetailListLikeById = nezhaApi.getServerDeList(null, null);
+                List<ServerDetailVO> serverDetailListLikeById = nezhaApi.getServerDetaiList(null, null);
                 List<ServerDetailVO> collect = serverDetailListLikeById.stream()
                         .filter(item -> item.getName().contains(param))
                         .toList();

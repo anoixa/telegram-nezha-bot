@@ -13,6 +13,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>telegram-nezha-bot</name>
     <description>telegram-nezha-bot</description>
+    <packaging>jar</packaging>
     <properties>
         <java.version>21</java.version>
     </properties>

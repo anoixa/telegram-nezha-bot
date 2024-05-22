@@ -33,4 +33,5 @@ public class MessagesEnum {
             ====================
             更新于: %s
             """;
+    public static final String REFRESH_BUTTON = "刷新";
 }

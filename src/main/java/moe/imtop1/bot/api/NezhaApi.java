@@ -83,7 +83,7 @@ public class NezhaApi {
         return serverInfoList;
     }
 
-    public List<ServerDetailVO> getServerDeList(String tag, Long id) {
+    public List<ServerDetailVO> getServerDetaiList(String tag, Long id) {
         String path = address + serverDetailPath;
         if (StringUtils.hasText(tag)) {
             path = path + "?tag=" + tag;
