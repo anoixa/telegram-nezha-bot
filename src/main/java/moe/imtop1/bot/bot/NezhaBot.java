@@ -19,8 +19,11 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * bot主体逻辑
@@ -202,20 +205,21 @@ public class NezhaBot extends TelegramLongPollingBot {
         switch (command) {
             case "/num":
                 // 返回服务器信息列表
-                String tag = StringUtils.hasText(param) ? param : null;
-                List<ServerInfo> serverList = nezhaApi.getServerList(tag);
+                //TODO 判断服务器是否在线
+                String tagForQueryNum = StringUtils.hasText(param) ? param : null;
+                List<ServerInfo> serverList = nezhaApi.getServerList(tagForQueryNum);
                 if (serverList.isEmpty()) {
                     msgList.add(this.createMessage(
                             String.valueOf(chatId),
                             "No servers found.",
-                            createRefreshButton(command, param)
+                            this.createRefreshButton(command, param)
                     ));
                 } else {
                     String serverCountMsg = serverList.size() + " servers found.";
                     msgList.add(this.createMessage(
                             String.valueOf(chatId),
                             serverCountMsg,
-                            createRefreshButton(command, param)
+                            this.createRefreshButton(command, param)
                     ));
                 }
                 break;
@@ -223,33 +227,33 @@ public class NezhaBot extends TelegramLongPollingBot {
                 //根据ID返回服务器的详细信息
                 try {
                     long serverId = Long.parseLong(param);
-                    List<ServerDetailVO> serverDetailListById = nezhaApi.getServerDetaiList(null, serverId);
+                    List<ServerDetailVO> serverDetailListById = nezhaApi.getServerDetailList(null, serverId);
                     if (serverDetailListById != null) {
                         ServerDetailVO serverDetailVO = serverDetailListById.getFirst();
                         String detailMessage = formatStatusMessage(serverDetailVO);
                         msgList.add(this.createMessage(
                                 String.valueOf(chatId),
                                 detailMessage,
-                                createRefreshButton(command, param)
+                                this.createRefreshButton(command, param)
                         ));
                     } else {
                         msgList.add(this.createMessage(
                                 String.valueOf(chatId),
                                 "Server with ID " + param + " not found.",
-                                createRefreshButton(command, null)
+                                this.createRefreshButton(command, null)
                         ));
                     }
                 } catch (NumberFormatException e) {
                     msgList.add(this.createMessage(
                             String.valueOf(chatId),
                             "Invalid ID format.",
-                            createRefreshButton(command, null)
+                            this.createRefreshButton(command, null)
                     ));
                 }
                 break;
             case "/search":
                 //根据名称搜索服务器
-                List<ServerDetailVO> serverDetailListLikeById = nezhaApi.getServerDetaiList(null, null);
+                List<ServerDetailVO> serverDetailListLikeById = nezhaApi.getServerDetailList(null, null);
                 List<ServerDetailVO> collect = serverDetailListLikeById.stream()
                         .filter(item -> item.getName().contains(param))
                         .toList();
@@ -257,23 +261,69 @@ public class NezhaBot extends TelegramLongPollingBot {
                     msgList.add(this.createMessage(
                             String.valueOf(chatId),
                             "No servers match your query.",
-                            createRefreshButton(command, param)));
+                            this.createRefreshButton(command, param)));
                 } else {
                     collect.forEach(server -> {
                         String detailMessage = formatStatusMessage(server);
-                        msgList.add(createMessage(
+                        msgList.add(this.createMessage(
                                 String.valueOf(chatId),
                                 detailMessage,
-                                createRefreshButton(command, param)
+                                this.createRefreshButton(command, param)
                         ));
                     });
                 }
+                break;
+            case "/all":
+                String tagForQueryAll = StringUtils.hasText(param) ? param : null;
+                List<ServerDetailVO> serverDetailList = nezhaApi.getServerDetailList(tagForQueryAll, null);
+
+                //服务器数量
+                int serverSum = serverDetailList.size();
+
+                //内存总数
+                BigDecimal memSum = serverDetailList.stream()
+                        .map(item -> new BigDecimal(item.getServerDetailHost().getMemTotal()))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                //使用的总内存
+                BigDecimal useMemSum = serverDetailList.stream()
+                        .map(item -> new BigDecimal(Long.parseLong(item.getServerDetailStatus().getMemUsed())))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                //总体内存使用率
+                BigDecimal usageRate = useMemSum.divide(memSum, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
+
+                //CPU核心
+                int physicalCores = 0;
+                int virtualCores = 0;
+                for (ServerDetailVO vo : serverDetailList){
+                    List<String> cpu = vo.getServerDetailHost().getCpu();
+                    for (String s : cpu) {
+                        physicalCores += ToolUtils.getCores(s, "Physical Core");
+                        virtualCores += ToolUtils.getCores(s, "Virtual Core");
+                    }
+                }
+                int sumCpuCores = physicalCores + virtualCores;
+
+                //使用的总上行
+                BigDecimal netOutTransferSum = serverDetailList.stream()
+                        .map(item -> BigDecimal.valueOf(Integer.parseInt(item.getServerDetailStatus().getNetOutSpeed())))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                //使用的总下行
+                BigDecimal netInTransferSum = serverDetailList.stream()
+                        .map(item -> BigDecimal.valueOf(Integer.parseInt(item.getServerDetailStatus().getNetInSpeed())))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                // 计算流量对等性
+                BigDecimal totalTransferSum = netOutTransferSum.add(netInTransferSum);
+                BigDecimal transferDifference = netOutTransferSum.subtract(netInTransferSum).abs();
+                BigDecimal trafficParity = transferDifference.divide(totalTransferSum, 4, RoundingMode.HALF_UP);
+
+
+
                 break;
             default:
                 msgList.add(this.createMessage(
                         String.valueOf(chatId),
                         "Invalid command. Please try again.",
-                        createRefreshButton(command, null)
+                        this.createRefreshButton(command, null)
                 ));
         }
 

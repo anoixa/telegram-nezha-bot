@@ -3,6 +3,8 @@ package moe.imtop1.bot.utils;
 import moe.imtop1.bot.domain.ServerInfo;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 工具类
@@ -74,6 +76,27 @@ public class ToolUtils {
         }
 
         return flagEmoji.toString();
+    }
+
+    /**
+     * 从输入字符串中提取指定类型核心前的数字。
+     *
+     * @param input 要处理的输入字符串。
+     * @param coreType 要查找的核心类型，可以是 "Physical Core" 或 "Virtual Core"。
+     * @return 核心数，如果找到匹配的核心类型及其前的数字。
+     * @throws IllegalArgumentException 如果输入字符串中没有找到匹配的核心类型及其前的数字。
+     */
+    public static int getCores(String input, String coreType) {
+        // 构建正则表达式来匹配特定核心类型前的数字
+        String regex = "(\\d+)\\s+" + coreType;
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(input);
+
+        if (matcher.find()) {
+            return Integer.parseInt(matcher.group(1));
+        } else {
+            throw new IllegalArgumentException("No matching core count found for core type: " + coreType);
+        }
     }
 
 }
