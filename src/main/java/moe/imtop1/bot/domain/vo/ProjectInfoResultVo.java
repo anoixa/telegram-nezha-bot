@@ -1,7 +1,7 @@
 package moe.imtop1.bot.domain.vo;
 
 import lombok.Data;
-import moe.imtop1.bot.domain.ServerInfo;
+import moe.imtop1.bot.domain.entity.ServerInfo;
 
 import java.util.List;
 

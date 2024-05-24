@@ -1,6 +1,6 @@
 package moe.imtop1.bot.utils;
 
-import moe.imtop1.bot.domain.ServerInfo;
+import moe.imtop1.bot.domain.entity.ServerInfo;
 
 import java.util.List;
 import java.util.regex.Matcher;

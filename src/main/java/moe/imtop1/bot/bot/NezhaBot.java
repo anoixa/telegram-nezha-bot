@@ -2,9 +2,11 @@ package moe.imtop1.bot.bot;
 
 import lombok.extern.slf4j.Slf4j;
 import moe.imtop1.bot.api.NezhaApi;
-import moe.imtop1.bot.domain.ServerInfo;
+import moe.imtop1.bot.domain.entity.ServerInfo;
+import moe.imtop1.bot.domain.template.MessageTemplate;
 import moe.imtop1.bot.domain.vo.ServerDetailVO;
-import moe.imtop1.bot.utils.MessagesEnum;
+import moe.imtop1.bot.domain.vo.ServerInfoVO;
+import moe.imtop1.bot.domain.enums.AppConstants;
 import moe.imtop1.bot.utils.ToolUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +25,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * bot主体逻辑
@@ -163,7 +164,7 @@ public class NezhaBot extends TelegramLongPollingBot {
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
 
         InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
-        inlineKeyboardButton.setText(MessagesEnum.REFRESH_BUTTON);
+        inlineKeyboardButton.setText(AppConstants.REFRESH_BUTTON);
         inlineKeyboardButton.setCallbackData(command + (param != null ? " " + param : ""));
 
         rowInline.add(inlineKeyboardButton);
@@ -277,44 +278,8 @@ public class NezhaBot extends TelegramLongPollingBot {
                 String tagForQueryAll = StringUtils.hasText(param) ? param : null;
                 List<ServerDetailVO> serverDetailList = nezhaApi.getServerDetailList(tagForQueryAll, null);
 
-                //服务器数量
-                int serverSum = serverDetailList.size();
-
-                //内存总数
-                BigDecimal memSum = serverDetailList.stream()
-                        .map(item -> new BigDecimal(item.getServerDetailHost().getMemTotal()))
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-                //使用的总内存
-                BigDecimal useMemSum = serverDetailList.stream()
-                        .map(item -> new BigDecimal(Long.parseLong(item.getServerDetailStatus().getMemUsed())))
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-                //总体内存使用率
-                BigDecimal usageRate = useMemSum.divide(memSum, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
-
-                //CPU核心
-                int physicalCores = 0;
-                int virtualCores = 0;
-                for (ServerDetailVO vo : serverDetailList){
-                    List<String> cpu = vo.getServerDetailHost().getCpu();
-                    for (String s : cpu) {
-                        physicalCores += ToolUtils.getCores(s, "Physical Core");
-                        virtualCores += ToolUtils.getCores(s, "Virtual Core");
-                    }
-                }
-                int sumCpuCores = physicalCores + virtualCores;
-
-                //使用的总上行
-                BigDecimal netOutTransferSum = serverDetailList.stream()
-                        .map(item -> BigDecimal.valueOf(Integer.parseInt(item.getServerDetailStatus().getNetOutSpeed())))
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-                //使用的总下行
-                BigDecimal netInTransferSum = serverDetailList.stream()
-                        .map(item -> BigDecimal.valueOf(Integer.parseInt(item.getServerDetailStatus().getNetInSpeed())))
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-                // 计算流量对等性
-                BigDecimal totalTransferSum = netOutTransferSum.add(netInTransferSum);
-                BigDecimal transferDifference = netOutTransferSum.subtract(netInTransferSum).abs();
-                BigDecimal trafficParity = transferDifference.divide(totalTransferSum, 4, RoundingMode.HALF_UP);
+                //获取数据
+                ServerInfoVO severInfo = this.getSeverInfo(serverDetailList);
 
 
 
@@ -331,13 +296,97 @@ public class NezhaBot extends TelegramLongPollingBot {
     }
 
     /**
+     * 查询全部服务器基本信息
+     * @param serverDetailList 服务器详细列表
+     * @return 整体服务器详细对象
+     */
+    private ServerInfoVO getSeverInfo(List<ServerDetailVO> serverDetailList) {
+        //服务器数量
+        int serverSum = serverDetailList.size();
+
+        //内存总数
+        BigDecimal memSum = serverDetailList.stream()
+                .map(item -> new BigDecimal(item.getServerDetailHost().getMemTotal()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        //使用的总内存
+        BigDecimal useMemSum = serverDetailList.stream()
+                .map(item -> new BigDecimal(item.getServerDetailStatus().getMemUsed()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        //总体内存使用率
+        BigDecimal memUsageRate = useMemSum.divide(memSum, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
+
+        //swap总数
+        BigDecimal swapSum = serverDetailList.stream()
+                .map(item -> new BigDecimal(item.getServerDetailHost().getSwapTotal()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        //使用的总swap
+        BigDecimal useSwapSum = serverDetailList.stream()
+                .map(item -> new BigDecimal(item.getServerDetailStatus().getSwapUsed()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        //总体swap使用率
+        BigDecimal swapUsageRate = useSwapSum.divide(swapSum, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
+
+        //磁盘空间总数
+        BigDecimal diskSum = serverDetailList.stream()
+                .map(item -> new BigDecimal(item.getServerDetailHost().getDiskTotal()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        //使用的总磁盘空间
+        BigDecimal useDiskSum = serverDetailList.stream()
+                .map(item -> new BigDecimal(item.getServerDetailStatus().getDiskUsed()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        //总体磁盘使用率
+        BigDecimal diskUsageRate = useDiskSum.divide(diskSum, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
+
+        //CPU核心
+        int physicalCores = 0;
+        int virtualCores = 0;
+        for (ServerDetailVO vo : serverDetailList){
+            List<String> cpu = vo.getServerDetailHost().getCpu();
+            for (String s : cpu) {
+                physicalCores += ToolUtils.getCores(s, "Physical Core");
+                virtualCores += ToolUtils.getCores(s, "Virtual Core");
+            }
+        }
+        int sumCpuCores = physicalCores + virtualCores;
+
+        //使用的总上行
+        BigDecimal netOutTransferSum = serverDetailList.stream()
+                .map(item -> new BigDecimal(item.getServerDetailStatus().getNetOutTransfer()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        //使用的总下行
+        BigDecimal netInTransferSum = serverDetailList.stream()
+                .map(item -> new BigDecimal(item.getServerDetailStatus().getNetInTransfer()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // 计算流量对等性
+        BigDecimal totalTransferSum = netOutTransferSum.add(netInTransferSum);
+        BigDecimal transferDifference = netOutTransferSum.subtract(netInTransferSum).abs();
+        BigDecimal trafficParity = transferDifference.divide(totalTransferSum, 4, RoundingMode.HALF_UP);
+
+        //上行总速率
+        BigDecimal netOutSpeedSum = serverDetailList.stream()
+                .map(item -> new BigDecimal(item.getServerDetailStatus().getNetOutSpeed()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        //下行总速率
+        BigDecimal netInSpeedSum = serverDetailList.stream()
+                .map(item -> new BigDecimal(item.getServerDetailStatus().getNetInSpeed()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        //封装数据
+        return new ServerInfoVO(
+                serverSum, memSum, useMemSum, memUsageRate, swapSum, useSwapSum, swapUsageRate,diskSum, useDiskSum,
+                diskUsageRate, physicalCores, virtualCores, sumCpuCores, netOutTransferSum, netInTransferSum,
+                trafficParity, netOutSpeedSum, netInSpeedSum
+        );
+    }
+
+    /**
      * 格式化消息
      * @param status 信息DTO
      * @return 格式化后的消息
      */
     private String formatStatusMessage(ServerDetailVO status) {
         return String.format(
-                MessagesEnum.SERVER_STATUS_TEMPLATE,
+                MessageTemplate.SERVER_STATUS_TEMPLATE,
                 ToolUtils.countryCodeToFlagEmoji(status.getServerDetailHost().getCountryCode()),
                 status.getName(),
                 status.getServerDetailHost().getCountryCode().toUpperCase(),

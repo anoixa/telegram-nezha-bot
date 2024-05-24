@@ -2,7 +2,7 @@ package moe.imtop1.bot.config;
 
 import lombok.extern.slf4j.Slf4j;
 import moe.imtop1.bot.bot.NezhaBot;
-import moe.imtop1.bot.utils.MessagesEnum;
+import moe.imtop1.bot.domain.enums.AppConstants;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,6 +26,10 @@ public class TelegramBotConfig {
     @Value("${telegram.proxy.config.port}")
     private String port;
 
+    /**
+     * 代理配置Bean
+     * @return
+     */
     @Bean
     public DefaultBotOptions defaultBotOptions() {
         DefaultBotOptions botOptions = new DefaultBotOptions();
@@ -34,22 +38,27 @@ public class TelegramBotConfig {
             botOptions.setProxyHost(address);
             botOptions.setProxyPort(Integer.parseInt(port));
 
-            log.info(String.format(MessagesEnum.PROXY_INFO_TEMPLATE, proxyType, address + ":" + port));
+            log.info(String.format(AppConstants.PROXY_INFO_TEMPLATE, proxyType, address + ":" + port));
         }
         return botOptions;
     }
 
+    /**
+     * 机器人注册配置Bean
+     * @param bot 注册的bot
+     * @return
+     */
     @Bean
     public TelegramBotsApi telegramBotsApi(NezhaBot bot) {
         try {
             TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
             telegramBotsApi.registerBot(bot);
 
-            log.info(MessagesEnum.SUCCESS_REGISTERING_BOT + ": " + bot);
+            log.info(AppConstants.SUCCESS_REGISTERING_BOT + ": " + bot);
 
             return telegramBotsApi;
         } catch (TelegramApiException e) {
-            throw new RuntimeException(MessagesEnum.ERROR_REGISTERING_BOT + ": ", e);
+            throw new RuntimeException(AppConstants.ERROR_REGISTERING_BOT + ": ", e);
         }
     }
 

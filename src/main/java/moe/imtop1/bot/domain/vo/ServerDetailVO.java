@@ -3,8 +3,8 @@ package moe.imtop1.bot.domain.vo;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.ToString;
-import moe.imtop1.bot.domain.ServerDetailHost;
-import moe.imtop1.bot.domain.ServerDetailStatus;
+import moe.imtop1.bot.domain.entity.ServerDetailHost;
+import moe.imtop1.bot.domain.entity.ServerDetailStatus;
 
 
 @Data

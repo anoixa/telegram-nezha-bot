@@ -1,4 +1,4 @@
-package moe.imtop1.bot.domain;
+package moe.imtop1.bot.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
