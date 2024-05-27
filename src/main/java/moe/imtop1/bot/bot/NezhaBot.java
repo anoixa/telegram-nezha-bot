@@ -280,16 +280,24 @@ public class NezhaBot extends TelegramLongPollingBot {
 
                 //获取数据
                 ServerInfoVO severInfo = this.getSeverInfo(serverDetailList);
+                String msg = this.formatStatusMessage(severInfo);
 
-
+                msgList.add(this.createMessage(
+                        String.valueOf(chatId),
+                        msg,
+                        this.createRefreshButton(command, param)
+                ));
 
                 break;
             default:
-                msgList.add(this.createMessage(
-                        String.valueOf(chatId),
-                        "Invalid command. Please try again.",
-                        this.createRefreshButton(command, null)
-                ));
+                if (ToolUtils.containsSlash(command, "/")) {
+                    SendMessage errorMessage = SendMessage.builder()
+                            .text(AppConstants.ILLEGAL_ORDER)
+                            .chatId(chatId)
+                            .build();
+
+                    msgList.add(errorMessage);
+                }
         }
 
         return msgList;
@@ -342,9 +350,20 @@ public class NezhaBot extends TelegramLongPollingBot {
         int virtualCores = 0;
         for (ServerDetailVO vo : serverDetailList){
             List<String> cpu = vo.getServerDetailHost().getCpu();
-            for (String s : cpu) {
-                physicalCores += ToolUtils.getCores(s, "Physical Core");
-                virtualCores += ToolUtils.getCores(s, "Virtual Core");
+
+            if (cpu != null) {
+                for (String s : cpu) {
+                    try {
+                        physicalCores += ToolUtils.getCores(s, "Physical Core");
+                    } catch (IllegalArgumentException e) {
+                        physicalCores += 0;
+                    }
+                    try {
+                        virtualCores += ToolUtils.getCores(s, "Virtual Core");
+                    } catch (IllegalArgumentException e) {
+                        virtualCores += 0;
+                    }
+                }
             }
         }
         int sumCpuCores = physicalCores + virtualCores;
@@ -423,6 +442,34 @@ public class NezhaBot extends TelegramLongPollingBot {
                 ToolUtils.bytesToGigabytes(Long.parseLong(status.getServerDetailStatus().getNetInTransfer())),
                 status.getServerDetailStatus().getTcpConnCount(),
                 status.getServerDetailStatus().getUdpConnCount(),
+                new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date())
+        ).trim();
+    }
+
+
+    /**
+     * 格式化消息(/all)
+     * @param status 信息DTO
+     * @return 格式化后的消息
+     */
+    private String formatStatusMessage(ServerInfoVO status){
+        return String.format(
+                MessageTemplate.ALL_SERVER_STATUS_TEMPLATE,
+                status.getSumCpuCores().longValue(),
+                status.getUseMemSum().doubleValue(),
+                status.getMemSum().doubleValue(),
+                status.getMemUsageRate().doubleValue(),
+                status.getUseSwapSum().doubleValue(),
+                status.getSwapSum().doubleValue(),
+                status.getSwapUsageRate().doubleValue(),
+                status.getUseDiskSum().doubleValue(),
+                status.getDiskSum().doubleValue(),
+                status.getDiskUsageRate().doubleValue(),
+                status.getNetOutSpeedSum().doubleValue(),
+                status.getNetInSpeedSum().doubleValue(),
+                status.getNetOutTransferSum().doubleValue(),
+                status.getNetInTransferSum().doubleValue(),
+                status.getTrafficParity().doubleValue(),
                 new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date())
         ).trim();
     }

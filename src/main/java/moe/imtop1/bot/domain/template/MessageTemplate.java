@@ -31,7 +31,7 @@ public class MessageTemplate {
             """
             统计信息
             ===========================
-            CPU核心数: %s
+            CPU核心数: %d
             内存: %.2f GB/%.2f GB (%.2f%%)
             交换: %.2f GB/%.2f GB (%.2f%%)
             磁盘: %.2f GB/%.2f GB (%.2f%%)

@@ -11,6 +11,8 @@ import java.util.regex.Pattern;
  * @author anoixa
  */
 public class ToolUtils {
+    public static String CORE = "(\\d+)\\s+";
+
     /**
      * 判断一个list的总长度
      * @param list 输入list
@@ -88,7 +90,7 @@ public class ToolUtils {
      */
     public static int getCores(String input, String coreType) {
         // 构建正则表达式来匹配特定核心类型前的数字
-        String regex = "(\\d+)\\s+" + coreType;
+        String regex = CORE + coreType;
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(input);
 
@@ -97,6 +99,16 @@ public class ToolUtils {
         } else {
             throw new IllegalArgumentException("No matching core count found for core type: " + coreType);
         }
+    }
+
+    /**
+     * 判断字符串中是否含有某字符
+     * @param str1 待检测的字符串
+     * @param str2 需要检测存在的字符串
+     * @return boolean
+     */
+    public static boolean containsSlash(String str1, String str2) {
+        return str1.contains(str2);
     }
 
 }
