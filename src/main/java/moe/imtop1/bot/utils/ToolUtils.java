@@ -39,6 +39,9 @@ public class ToolUtils {
     public static double bytesToGigabytes(long bytes) {
         return bytes / (double) (1024 * 1024 * 1024);
     }
+    public static double bytesToGigabytes(double bytes) {
+        return bytes / (double) (1024 * 1024 * 1024);
+    }
 
     /**
      * 将网络速度从位每秒转换为千字节每秒。
@@ -46,6 +49,9 @@ public class ToolUtils {
      * @return 网络速度，单位为千字节每秒（KB/s）。
      */
     public static double convertBitsPerSecondToKilobytesPerSecond(int bitsPerSecond) {
+        return bitsPerSecond / 8.0 / 1024.0;
+    }
+    public static double convertBitsPerSecondToKilobytesPerSecond(double bitsPerSecond) {
         return bitsPerSecond / 8.0 / 1024.0;
     }
 

@@ -379,7 +379,9 @@ public class NezhaBot extends TelegramLongPollingBot {
         // 计算流量对等性
         BigDecimal totalTransferSum = netOutTransferSum.add(netInTransferSum);
         BigDecimal transferDifference = netOutTransferSum.subtract(netInTransferSum).abs();
-        BigDecimal trafficParity = transferDifference.divide(totalTransferSum, 4, RoundingMode.HALF_UP);
+        BigDecimal trafficParity = BigDecimal.ONE.subtract(
+                transferDifference.divide(totalTransferSum, 4, RoundingMode.HALF_UP)
+        ).multiply(BigDecimal.valueOf(100));
 
         //上行总速率
         BigDecimal netOutSpeedSum = serverDetailList.stream()
@@ -455,20 +457,21 @@ public class NezhaBot extends TelegramLongPollingBot {
     private String formatStatusMessage(ServerInfoVO status){
         return String.format(
                 MessageTemplate.ALL_SERVER_STATUS_TEMPLATE,
+                status.getServerSum(),
                 status.getSumCpuCores().longValue(),
-                status.getUseMemSum().doubleValue(),
-                status.getMemSum().doubleValue(),
+                ToolUtils.bytesToGigabytes(status.getUseMemSum().doubleValue()),
+                ToolUtils.bytesToGigabytes(status.getMemSum().doubleValue()),
                 status.getMemUsageRate().doubleValue(),
-                status.getUseSwapSum().doubleValue(),
-                status.getSwapSum().doubleValue(),
+                ToolUtils.bytesToGigabytes(status.getUseSwapSum().doubleValue()),
+                ToolUtils.bytesToGigabytes(status.getSwapSum().doubleValue()),
                 status.getSwapUsageRate().doubleValue(),
-                status.getUseDiskSum().doubleValue(),
-                status.getDiskSum().doubleValue(),
+                ToolUtils.bytesToGigabytes(status.getUseDiskSum().doubleValue()),
+                ToolUtils.bytesToGigabytes(status.getDiskSum().doubleValue()),
                 status.getDiskUsageRate().doubleValue(),
-                status.getNetOutSpeedSum().doubleValue(),
-                status.getNetInSpeedSum().doubleValue(),
-                status.getNetOutTransferSum().doubleValue(),
-                status.getNetInTransferSum().doubleValue(),
+                ToolUtils.convertBitsPerSecondToKilobytesPerSecond(status.getNetOutSpeedSum().doubleValue()),
+                ToolUtils.convertBitsPerSecondToKilobytesPerSecond(status.getNetInSpeedSum().doubleValue()),
+                ToolUtils.bytesToGigabytes(status.getNetOutTransferSum().doubleValue()),
+                ToolUtils.bytesToGigabytes(status.getNetInTransferSum().doubleValue()),
                 status.getTrafficParity().doubleValue(),
                 new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date())
         ).trim();

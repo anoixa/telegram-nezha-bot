@@ -5,6 +5,7 @@ package moe.imtop1.bot.domain.template;
  * @author anoixa
  */
 public class MessageTemplate {
+    public static final String PROXY_INFO_TEMPLATE = "Proxy Type: %s  Address: %s";
     public static final String SERVER_STATUS_TEMPLATE =
             """
             %s %s  (%s)
@@ -31,6 +32,7 @@ public class MessageTemplate {
             """
             统计信息
             ===========================
+            服务器数量: %d
             CPU核心数: %d
             内存: %.2f GB/%.2f GB (%.2f%%)
             交换: %.2f GB/%.2f GB (%.2f%%)

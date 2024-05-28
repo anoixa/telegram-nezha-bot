@@ -3,6 +3,7 @@ package moe.imtop1.bot.config;
 import lombok.extern.slf4j.Slf4j;
 import moe.imtop1.bot.bot.NezhaBot;
 import moe.imtop1.bot.domain.enums.AppConstants;
+import moe.imtop1.bot.domain.template.MessageTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,7 +39,7 @@ public class TelegramBotConfig {
             botOptions.setProxyHost(address);
             botOptions.setProxyPort(Integer.parseInt(port));
 
-            log.info(String.format(AppConstants.PROXY_INFO_TEMPLATE, proxyType, address + ":" + port));
+            log.info(String.format(MessageTemplate.PROXY_INFO_TEMPLATE, proxyType, address + ":" + port));
         }
         return botOptions;
     }
@@ -66,7 +67,7 @@ public class TelegramBotConfig {
         try {
             return DefaultBotOptions.ProxyType.valueOf(proxyTypeStr.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalStateException("Invalid proxy type provided in configuration: " + proxyTypeStr);
+            throw new IllegalStateException(AppConstants.PROXY_TYPE_ERROR + ": " + proxyTypeStr);
         }
     }
 }
