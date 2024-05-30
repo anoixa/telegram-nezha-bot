@@ -11,7 +11,7 @@ telegram:
     config:
       address: 127.0.0.1
       port: 10808
-      proxyType: SOCKS5
+      proxyType: NO_PROXY
 
 
 nezha:
