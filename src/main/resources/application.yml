@@ -5,8 +5,8 @@ spring:
 telegram:
   bot:
     config:
-      token: 7140980098:AAHUBamYQ9_BDZfRWxV_Yv3E-Ze2x1cSoDU
-      userName: 5760639009
+      token:
+      userName:
   proxy:
     config:
       address: 127.0.0.1
@@ -15,8 +15,8 @@ telegram:
 
 
 nezha:
-  address: https://status.imtop1.moe
-  token: a50fb02802d436325b62f926d6cb60f2
+  address:
+  token:
   path:
     serverInfo: /api/v1/server/list
     serverDetail: /api/v1/server/details
