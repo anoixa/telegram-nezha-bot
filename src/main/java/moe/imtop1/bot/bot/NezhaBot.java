@@ -444,7 +444,7 @@ public class NezhaBot extends TelegramLongPollingBot {
                 ToolUtils.bytesToGigabytes(Long.parseLong(status.getServerDetailStatus().getNetInTransfer())),
                 status.getServerDetailStatus().getTcpConnCount(),
                 status.getServerDetailStatus().getUdpConnCount(),
-                new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date())
+                ToolUtils.getCurrentTime()
         ).trim();
     }
 
@@ -473,7 +473,7 @@ public class NezhaBot extends TelegramLongPollingBot {
                 ToolUtils.bytesToGigabytes(status.getNetOutTransferSum().doubleValue()),
                 ToolUtils.bytesToGigabytes(status.getNetInTransferSum().doubleValue()),
                 status.getTrafficParity().doubleValue(),
-                new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date())
+                ToolUtils.getCurrentTime()
         ).trim();
     }
 }

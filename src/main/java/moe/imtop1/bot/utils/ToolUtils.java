@@ -2,6 +2,9 @@ package moe.imtop1.bot.utils;
 
 import moe.imtop1.bot.domain.entity.ServerInfo;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -115,6 +118,17 @@ public class ToolUtils {
      */
     public static boolean containsSlash(String str1, String str2) {
         return str1.contains(str2);
+    }
+
+    /**
+     * 获取当前时间
+     * @return 当前时间字符串
+     */
+    public static String getCurrentTime() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC+8"));
+
+        return sdf.format(new Date());
     }
 
 }
