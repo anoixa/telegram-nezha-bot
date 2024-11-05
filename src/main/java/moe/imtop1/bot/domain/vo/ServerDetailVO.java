@@ -31,6 +31,12 @@ public class ServerDetailVO {
     @JsonProperty("valid_ip")
     private String validIp;
 
+    @JsonProperty("display_index")
+    private String displayIndex;
+
+    @JsonProperty("hide_for_guest")
+    private Boolean hideForGuest;
+
     @JsonProperty("host")
     private ServerDetailHost serverDetailHost;
 

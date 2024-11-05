@@ -121,7 +121,7 @@ public class NezhaBot extends TelegramLongPollingBot {
         String command = parts[0];
         String param = parts.length > 1 ? parts[1] : null;
 
-        List<SendMessage> messages = getMessage(command, chatId, param);
+        List<SendMessage> messages = this.getMessage(command, chatId, param);
         for (SendMessage message : messages) {
             EditMessageText editMessageText = new EditMessageText();
 
@@ -204,8 +204,7 @@ public class NezhaBot extends TelegramLongPollingBot {
 
         // 根据命令分别处理
         switch (command) {
-            case "/num":
-                // 返回服务器信息列表
+            case "/num" -> {
                 //TODO 判断服务器是否在线
                 String tagForQueryNum = StringUtils.hasText(param) ? param : null;
                 List<ServerInfo> serverList = nezhaApi.getServerList(tagForQueryNum);
@@ -222,10 +221,9 @@ public class NezhaBot extends TelegramLongPollingBot {
                             serverCountMsg,
                             this.createRefreshButton(command, param)
                     ));
-                }
-                break;
-            case "/id":
-                //根据ID返回服务器的详细信息
+                } // 返回服务器信息列表
+            }
+            case "/id" -> {
                 try {
                     long serverId = Long.parseLong(param);
                     List<ServerDetailVO> serverDetailListById = nezhaApi.getServerDetailList(null, serverId);
@@ -250,10 +248,9 @@ public class NezhaBot extends TelegramLongPollingBot {
                             "Invalid ID format.",
                             this.createRefreshButton(command, null)
                     ));
-                }
-                break;
-            case "/search":
-                //根据名称搜索服务器
+                } //根据ID返回服务器的详细信息
+            }
+            case "/search" -> {
                 List<ServerDetailVO> serverDetailListLikeById = nezhaApi.getServerDetailList(null, null);
                 List<ServerDetailVO> collect = serverDetailListLikeById.stream()
                         .filter(item -> item.getName().contains(param))
@@ -272,9 +269,9 @@ public class NezhaBot extends TelegramLongPollingBot {
                                 this.createRefreshButton(command, param)
                         ));
                     });
-                }
-                break;
-            case "/all":
+                } //根据名称搜索服务器
+            }
+            case "/all" -> {
                 String tagForQueryAll = StringUtils.hasText(param) ? param : null;
                 List<ServerDetailVO> serverDetailList = nezhaApi.getServerDetailList(tagForQueryAll, null);
 
@@ -287,9 +284,8 @@ public class NezhaBot extends TelegramLongPollingBot {
                         msg,
                         this.createRefreshButton(command, param)
                 ));
-
-                break;
-            default:
+            }
+            default -> {
                 if (ToolUtils.containsSlash(command, "/")) {
                     SendMessage errorMessage = SendMessage.builder()
                             .text(AppConstants.ILLEGAL_ORDER)
@@ -298,6 +294,7 @@ public class NezhaBot extends TelegramLongPollingBot {
 
                     msgList.add(errorMessage);
                 }
+            }
         }
 
         return msgList;

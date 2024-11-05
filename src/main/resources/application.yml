@@ -1,6 +1,9 @@
 spring:
   application:
     name: telegram-nezha-bot
+  threads:
+    virtual:
+      enabled: true
 
 telegram:
   bot:
@@ -11,12 +14,12 @@ telegram:
     config:
       address: 127.0.0.1
       port: 10808
-      proxyType: NO_PROXY
+      proxyType: SOCKS5
 
 
 nezha:
-  address:
-  token:
+  address: https://status.imtop1.moe
+
   path:
     serverInfo: /api/v1/server/list
     serverDetail: /api/v1/server/details

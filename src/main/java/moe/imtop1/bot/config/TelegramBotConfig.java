@@ -63,6 +63,11 @@ public class TelegramBotConfig {
         }
     }
 
+    /**
+     * 将代理类型字符串转换为枚举值
+     * @param proxyTypeStr 代理类型字符串
+     * @return DefaultBotOptions.ProxyType
+     */
     private DefaultBotOptions.ProxyType convertToProxyType(String proxyTypeStr) {
         try {
             return DefaultBotOptions.ProxyType.valueOf(proxyTypeStr.toUpperCase());

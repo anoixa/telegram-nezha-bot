@@ -1,5 +1,10 @@
 package moe.imtop1.bot.domain.enums;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 /**
  * 常量定义类
  * @author anoixa
@@ -13,3 +18,5 @@ public class AppConstants {
     public static final String REFRESH_BUTTON = "刷新";
     public static final String PROXY_TYPE_ERROR = "Invalid proxy type provided in configuration";
 }
+
+
